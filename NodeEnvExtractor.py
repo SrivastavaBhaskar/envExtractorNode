@@ -3,6 +3,7 @@ from venv import create
 
 class NodeEnvExtractor:
     envFound = set()
+    envs = set()
     projectName = ""
     rootDir = ""
 
@@ -60,16 +61,19 @@ class NodeEnvExtractor:
             while(len(line) > 0):
                 if "process.env" in line:
                     env = self.extractEnv(line)
-                    self.envFound.add(env)
+                    self.envFound.update(env)
                 line = f.readline()
 
     def extractEnv(self, line):
-        line = line[line.index("process.env") + len("process.env.")::]
-        i = 0
-        for i in range(len(line)):
-            if not (line[i].isalnum() or line[i] == '_'):
-                break
-        return line[0:i:]
+        while "process.env" in line:
+            line = line[line.index("process.env") + len("process.env.")::]
+            i = 0
+            for i in range(len(line)):
+                if not (line[i].isalnum() or line[i] == '_'):
+                    break
+            self.envs.add(line[0:i:])
+            line = line[i::]
+        return self.envs
 
     def generateEnvFile(self):
         for env in self.envFound:
